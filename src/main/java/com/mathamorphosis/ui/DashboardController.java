@@ -77,6 +77,7 @@ public class DashboardController {
         grid.add(makeCard("Algebra",             "2D Graphing Calculator",               "#d46b6b", "GRAPHING_CALC",   "algebra"),       1, 2);
         grid.add(makeCard("Signal Processing",   "Fourier Series Epicycles",             "#9b72d4", "FOURIER_SERIES",  "fourier"),       0, 3);
         grid.add(makeCard("Mathematical Marvels","The Chaos Game: Order from Randomness","#d4a84b", "CHAOS_GAME",      "chaos"),         1, 3);
+        grid.add(makeCard("Computational Geometry","Jarvis March Convex Hull",           "#5ba8e0", "CONVEX_HULL",     "convex_hull"),   0, 4);
 
         content.getChildren().addAll(header, grid);
 
@@ -223,6 +224,7 @@ public class DashboardController {
             case "algebra"        -> drawAlgebra(gc, accent, s);
             case "fourier"        -> drawFourier(gc, accent, s);
             case "chaos"          -> drawChaos(gc, accent, s);
+            case "convex_hull"    -> drawConvexHullAnim(gc, accent, s);
         }
     }
 
@@ -531,6 +533,57 @@ public class DashboardController {
             gc.fillRect(pt[0], pt[1], 1.8, 1.8);
         }
         if (visible >= s.chaosPoints.size()) s.t = 0;
+    }
+
+    // ── 9. Convex Hull ───────────────────────────────────────────────────────
+    private void drawConvexHullAnim(GraphicsContext gc, Color accent, AnimState s) {
+        int numHull = 7;
+        double[] hx = new double[numHull];
+        double[] hy = new double[numHull];
+        
+        double cx = CARD_W / 2.0;
+        double cy = CARD_H / 2.0;
+        
+        // Generate moving hull vertices
+        for (int i = 0; i < numHull; i++) {
+            double baseAngle = i * (Math.PI * 2.0 / numHull);
+            // Add a slow overall rotation and slight individual oscillation
+            double angle = baseAngle + s.t * 0.3 + 0.2 * Math.sin(s.t * 0.8 + i);
+            double radiusX = 65 + 15 * Math.sin(s.t * 1.1 + i * 2);
+            double radiusY = 45 + 10 * Math.cos(s.t * 0.9 + i * 3);
+            
+            hx[i] = cx + radiusX * Math.cos(angle);
+            hy[i] = cy + radiusY * Math.sin(angle);
+        }
+        
+        // Generate some moving inner points
+        int numInner = 12;
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.15));
+        for (int i = 0; i < numInner; i++) {
+            double ix = cx + 30 * Math.cos(s.t * 0.5 + i * 2.4);
+            double iy = cy + 20 * Math.sin(s.t * 0.7 + i * 3.1);
+            gc.fillOval(ix - 3, iy - 3, 6, 6);
+        }
+        
+        // Draw the hull edges
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.35));
+        gc.setLineWidth(1.8);
+        gc.strokePolygon(hx, hy, numHull);
+        
+        // Draw the hull vertices
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.5));
+        for (int i = 0; i < numHull; i++) {
+            gc.fillOval(hx[i] - 3.5, hy[i] - 3.5, 7, 7);
+        }
+        
+        // Draw a simulated "sweeping" dashed ray that rotates
+        double rayAngle = s.t * 1.5;
+        double rLength = 90;
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2));
+        gc.setLineDashes(4, 4);
+        gc.setLineWidth(1.5);
+        gc.strokeLine(cx, cy, cx + rLength * Math.cos(rayAngle), cy + rLength * Math.sin(rayAngle));
+        gc.setLineDashes();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

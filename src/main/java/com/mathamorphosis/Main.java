@@ -78,6 +78,7 @@ public class Main extends Application {
                 case "GRAPHING_CALC": fxmlFile = "/fxml/graphing_calculator_view.fxml"; break;
                 case "FOURIER_SERIES": fxmlFile = "/fxml/fourier_series_view.fxml"; break;
                 case "CHAOS_GAME": fxmlFile = "/fxml/chaos_game_view.fxml"; break;
+                case "CONVEX_HULL": fxmlFile = "/fxml/convex_hull_view.fxml"; break;
             }
 
             if (!fxmlFile.isEmpty()) {

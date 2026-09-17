@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.mathamorphosis.ui.visualizations.ConvexHullViewController"
+            style="-fx-background-color: #0c0c1e;">
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- ═══════════════════ CENTER: Canvas + Controls ═══════════════════ -->
+    <center>
+        <VBox alignment="CENTER" spacing="15">
+
+            <Label text="Jarvis March (Gift Wrapping) Convex Hull"
+                   style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #f0f0f8;"/>
+
+            <Canvas fx:id="canvas" width="700" height="600"/>
+
+            <HBox alignment="CENTER" spacing="15">
+                <Button fx:id="randomizeBtn" text="🎲 Randomize (15)" styleClass="back-button"/>
+                <Button fx:id="clearBtn"     text="🗑 Clear"        styleClass="back-button"/>
+                <Button fx:id="startResetBtn" text="▶ Start / Reset"  styleClass="back-button"/>
+                <Button fx:id="stepBtn"      text="⏭ Step Next"    styleClass="back-button"/>
+                <Button fx:id="playPauseBtn" text="⏯ Play / Pause" styleClass="back-button"/>
+            </HBox>
+            <HBox alignment="CENTER" spacing="10">
+                <Label text="Speed (steps/sec):" style="-fx-text-fill: #f0f0f8; -fx-font-size: 14px;"/>
+                <Slider fx:id="speedSlider" min="1" max="10" value="5" prefWidth="200" showTickMarks="true" showTickLabels="true" majorTickUnit="1" minorTickCount="0" snapToTicks="true"/>
+            </HBox>
+        </VBox>
+    </center>
+
+    <!-- ═══════════════════ RIGHT: Explanation Panel ═══════════════════ -->
+    <right>
+        <VBox spacing="20" prefWidth="420"
+              style="-fx-background-color: #14142a; -fx-border-color: #32325a; -fx-border-width: 0 0 0 1;">
+            <padding><Insets top="16" right="24" bottom="24" left="24"/></padding>
+
+            <Label text="📌 INSTRUCTIONS &amp; EXPLANATION"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #6868a0; -fx-letter-spacing: 1.2px;"/>
+
+            <!-- Live Step Tracker Card -->
+            <VBox spacing="10"
+                  style="-fx-background-color: #1c1c38; -fx-border-color: #5ba8e0;
+                         -fx-border-width: 0 0 0 4; -fx-border-radius: 0 8 8 0; -fx-background-radius: 8;">
+                <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+
+                <Label fx:id="statusBadgeLabel" text="READY"
+                       style="-fx-background-color: #22224a; -fx-text-fill: #5ba8e0;
+                              -fx-font-size: 12px; -fx-font-weight: bold;
+                              -fx-padding: 4 10; -fx-background-radius: 6;"/>
+                <Label fx:id="stepTitleLabel" text="Initialization"
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #5ba8e0;"/>
+                <Label fx:id="stepDescLabel"
+                       text="Click within the dashed rectangle on the canvas to add points or generate random ones. Then click Start to wrap them!"
+                       style="-fx-font-size: 15px; -fx-text-fill: #d0d0e8; -fx-wrap-text: true; -fx-line-spacing: 3px;"/>
+            </VBox>
+
+            <!-- Live Algorithm Metrics -->
+            <VBox spacing="10"
+                  style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                         -fx-border-width: 1; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+                <Label text="📊 LIVE ALGORITHM METRICS"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6868a0;"/>
+
+                <HBox spacing="12">
+                    <VBox alignment="CENTER" spacing="2"
+                          style="-fx-background-color: #141428; -fx-background-radius: 6;"
+                          HBox.hgrow="ALWAYS">
+                        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                        <Label fx:id="totalPointsLabel" text="0"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #4cbf95;"/>
+                        <Label text="Total Points"
+                               style="-fx-font-size: 12px; -fx-text-fill: #8080b0;"/>
+                    </VBox>
+
+                    <VBox alignment="CENTER" spacing="2"
+                          style="-fx-background-color: #141428; -fx-background-radius: 6;"
+                          HBox.hgrow="ALWAYS">
+                        <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                        <Label fx:id="hullVerticesLabel" text="0"
+                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #d4a84b;"/>
+                        <Label text="Hull Vertices"
+                               style="-fx-font-size: 12px; -fx-text-fill: #8080b0;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Mathematical Concept Rules -->
+            <VBox spacing="10"
+                  style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                         -fx-border-width: 1; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+
+                <Label text="💡 MATHEMATICAL CONCEPT"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6868a0;"/>
+                <Label text="• Finds the leftmost point (minimum X) as the starting vertex."
+                       style="-fx-font-size: 16px; -fx-text-fill: #d0d0e8; -fx-wrap-text: true;"/>
+                <Label text="• Uses 2D Cross Product to evaluate candidate vertices."
+                       style="-fx-font-size: 16px; -fx-text-fill: #d0d0e8; -fx-wrap-text: true;"/>
+                <Label text="• Selects the most clockwise point to add to the hull."
+                       style="-fx-font-size: 16px; -fx-text-fill: #d4a84b; -fx-font-weight: bold; -fx-wrap-text: true;"/>
+                <Label text="• Stops when it wraps back to the initial starting point."
+                       style="-fx-font-size: 16px; -fx-text-fill: #4cbf95; -fx-font-weight: bold; -fx-wrap-text: true;"/>
+            </VBox>
+
+            <!-- Color Legend -->
+            <VBox spacing="10"
+                  style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                         -fx-border-width: 1; -fx-border-radius: 8; -fx-background-radius: 8;">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                
+                <Label text="🎨 COLOR LEGEND"
+                       style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #6868a0;"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="●" style="-fx-font-size: 16px; -fx-text-fill: #ffa500;"/>
+                    <Label text="Current Candidate" style="-fx-font-size: 14px; -fx-text-fill: #d0d0e8;"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="●" style="-fx-font-size: 16px; -fx-text-fill: #4cbf95;"/>
+                    <Label text="Current Vertex Choice" style="-fx-font-size: 14px; -fx-text-fill: #d0d0e8;"/>
+                </HBox>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="●" style="-fx-font-size: 16px; -fx-text-fill: #ffffff;"/>
+                    <Label text="Confirmed Hull Vertex &amp; Edge" style="-fx-font-size: 14px; -fx-text-fill: #d0d0e8;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </right>
+</BorderPane>

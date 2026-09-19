@@ -78,6 +78,7 @@ public class DashboardController {
         grid.add(makeCard("Signal Processing",   "Fourier Series Epicycles",             "#9b72d4", "FOURIER_SERIES",  "fourier"),       0, 3);
         grid.add(makeCard("Mathematical Marvels","The Chaos Game: Order from Randomness","#d4a84b", "CHAOS_GAME",      "chaos"),         1, 3);
         grid.add(makeCard("Computational Geometry","Jarvis March Convex Hull",           "#5ba8e0", "CONVEX_HULL",     "convex_hull"),   0, 4);
+        grid.add(makeCard("Matrix",               "Linear Transformation",                "#4ab8c4", "MATRIX_TRANSFORM","matrix"),        1, 4);
 
         content.getChildren().addAll(header, grid);
 
@@ -149,11 +150,13 @@ public class DashboardController {
 
         Label titleLbl = new Label(titleText);
         titleLbl.setStyle(
-            "-fx-font-size:19px; -fx-font-weight:bold; -fx-text-fill:" + accentHex + ";"
+            "-fx-font-size:19px; -fx-font-weight:bold; -fx-text-fill:" + accentHex + ";" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(12,12,34,0.95), 8, 0, 0, 1);"
         );
         Label descLbl = new Label(descText);
         descLbl.setStyle(
-            "-fx-font-size:13px; -fx-text-fill:#8888aa; -fx-wrap-text:true;"
+            "-fx-font-size:13px; -fx-text-fill:#8888aa; -fx-wrap-text:true;" +
+            "-fx-effect: dropshadow(three-pass-box, rgba(12,12,34,0.95), 8, 0, 0, 1);"
         );
         VBox text = new VBox(6, titleLbl, descLbl);
         text.setAlignment(Pos.CENTER_LEFT);
@@ -225,6 +228,7 @@ public class DashboardController {
             case "fourier"        -> drawFourier(gc, accent, s);
             case "chaos"          -> drawChaos(gc, accent, s);
             case "convex_hull"    -> drawConvexHullAnim(gc, accent, s);
+            case "matrix"         -> drawMatrixAnim(gc, accent, s);
         }
     }
 
@@ -584,6 +588,89 @@ public class DashboardController {
         gc.setLineWidth(1.5);
         gc.strokeLine(cx, cy, cx + rLength * Math.cos(rayAngle), cy + rLength * Math.sin(rayAngle));
         gc.setLineDashes();
+    }
+
+    // ── 10. Matrix: Plane Flattening Animation ──────────────────────────────
+    private void drawMatrixAnim(GraphicsContext gc, Color accent, AnimState s) {
+        // Shift center toward the right side of the card so it doesn't obstruct left-aligned text
+        double cx = CARD_W * 0.68, cy = CARD_H * 0.50;
+        double scale = 16;
+
+        // Brightness ramp: starts very soft and faded, slowly gains brightness over 2.2s, never overpowering
+        double ramp = Math.min(1.0, s.t / 2.2);
+        // Smooth ease curve capped at a subtle maximum (0.65 max)
+        double brightness = 0.20 + 0.45 * (ramp * ramp * (3 - 2 * ramp));
+
+        // Periodic flattening cycle: oscillates between 2D open grid and completely flattened 1D line
+        // flattenFactor: 0.0 = full 2D grid, 1.0 = completely flattened onto 1D line
+        double flattenFactor = 0.5 - 0.5 * Math.cos(s.t * 1.3);
+
+        // Gentle drift angle so the transformation is dynamic
+        double theta = s.t * 0.2;
+        double cosT = Math.cos(theta);
+        double sinT = Math.sin(theta);
+
+        // Basis vector i-hat
+        double ma = cosT;
+        double mc = sinT;
+
+        // Basis vector j-hat: rotates toward i-hat until collinear at flattenFactor = 1.0
+        // When flattenFactor = 0, j-hat is orthogonal at theta + PI/2
+        // When flattenFactor = 1, j-hat aligns with i-hat at theta
+        double jAngle = theta + (Math.PI / 2.0) * (1.0 - flattenFactor);
+        double jLen = 1.0 - 0.25 * flattenFactor;
+        double mb = jLen * Math.cos(jAngle);
+        double md = jLen * Math.sin(jAngle);
+
+        // 1) Faint static background grid
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.04 * brightness));
+        gc.setLineWidth(0.5);
+        for (int i = -6; i <= 6; i++) {
+            gc.strokeLine(cx + i * scale, cy - 55, cx + i * scale, cy + 55);
+            gc.strokeLine(cx - 65, cy + i * scale, cx + 65, cy + i * scale);
+        }
+
+        // 2) Transformed grid lines flattening in real time
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.16 * brightness));
+        gc.setLineWidth(0.8);
+        int range = 5;
+        for (int i = -range; i <= range; i++) {
+            // Vertical lines (constant u, parameterized by v)
+            double x1 = cx + (ma * i + mb * (-range)) * scale;
+            double y1 = cy - (mc * i + md * (-range)) * scale;
+            double x2 = cx + (ma * i + mb * range) * scale;
+            double y2 = cy - (mc * i + md * range) * scale;
+            gc.strokeLine(x1, y1, x2, y2);
+
+            // Horizontal lines (constant v, parameterized by u)
+            double hx1 = cx + (ma * (-range) + mb * i) * scale;
+            double hy1 = cy - (mc * (-range) + md * i) * scale;
+            double hx2 = cx + (ma * range + mb * i) * scale;
+            double hy2 = cy - (mc * range + md * i) * scale;
+            gc.strokeLine(hx1, hy1, hx2, hy2);
+        }
+
+        // 3) Determinant parallelogram (shrinks to 0 area when flattened)
+        double ox = cx, oy = cy;
+        double ix = cx + ma * scale * 1.8, iy = cy - mc * scale * 1.8;
+        double jx = cx + mb * scale * 1.8, jy = cy - md * scale * 1.8;
+        double ijx = ix + mb * scale * 1.8, ijy = iy - md * scale * 1.8;
+
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.08 * brightness * (1.0 - flattenFactor)));
+        gc.fillPolygon(new double[]{ox, ix, ijx, jx}, new double[]{oy, iy, ijy, jy}, 4);
+
+        // 4) Basis vectors (i-hat in emerald green, j-hat in rose red)
+        gc.setStroke(new Color(0.30, 0.75, 0.58, 0.45 * brightness));
+        gc.setLineWidth(1.8);
+        gc.strokeLine(ox, oy, ix, iy);
+
+        gc.setStroke(new Color(0.93, 0.27, 0.27, 0.45 * brightness));
+        gc.setLineWidth(1.8);
+        gc.strokeLine(ox, oy, jx, jy);
+
+        // 5) Origin dot
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.45 * brightness));
+        gc.fillOval(cx - 2.5, cy - 2.5, 5, 5);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

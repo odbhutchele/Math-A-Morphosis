@@ -51,6 +51,11 @@
                               style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #b0b0d0;
                                      -fx-background-color: #22224a; -fx-padding: 12px 24px;
                                      -fx-background-radius: 8px; -fx-cursor: hand;"/>
+                <Button fx:id="resetBtn" text="4. Reset"
+                        style="-fx-font-size: 15px; -fx-text-fill: #f43f5e; -fx-font-weight: bold;
+                               -fx-background-color: #22224a; -fx-padding: 12px 24px;
+                               -fx-border-color: #f43f5e; -fx-border-radius: 8px;
+                               -fx-border-width: 2px; -fx-cursor: hand;"/>
             </HBox>
         </VBox>
     </center>
@@ -97,6 +102,8 @@
                                style="-fx-background-color: #22224a; -fx-text-fill: #f0f0f8; -fx-border-color: #5ba8e0; -fx-border-radius: 4; -fx-background-radius: 4;"/>
                         <Button fx:id="plotBtn" text="Plot"
                                 style="-fx-background-color: #5ba8e0; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"/>
+                        <Button fx:id="resetCoordBtn" text="Reset"
+                                style="-fx-background-color: #f43f5e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"/>
                     </HBox>
                 </VBox>
 

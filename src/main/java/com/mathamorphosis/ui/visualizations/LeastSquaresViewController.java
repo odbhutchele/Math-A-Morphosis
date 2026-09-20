@@ -42,6 +42,8 @@ public class LeastSquaresViewController {
     @FXML private TextField coordXInput;
     @FXML private TextField coordYInput;
     @FXML private Button    plotBtn;
+    @FXML private Button    resetBtn;
+    @FXML private Button    resetCoordBtn;
 
     // ── Coordinate system constants ──────────────────────────────────────────
     private static final double WIDTH   = 1000;
@@ -116,6 +118,38 @@ public class LeastSquaresViewController {
                 instructionLabel.setText("Invalid coordinate format.");
             }
         });
+        plotBtn.setOnMouseEntered(e -> plotBtn.setStyle(
+            "-fx-background-color: #38bdf8; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"
+        ));
+        plotBtn.setOnMouseExited(e -> plotBtn.setStyle(
+            "-fx-background-color: #5ba8e0; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"
+        ));
+
+        if (resetBtn != null) {
+            resetBtn.setOnAction(e -> reset());
+            resetBtn.setOnMouseEntered(e -> resetBtn.setStyle(
+                "-fx-font-size: 15px; -fx-text-fill: #ffffff; -fx-font-weight: bold;" +
+                "-fx-background-color: #f43f5e; -fx-padding: 12px 24px;" +
+                "-fx-border-color: #f43f5e; -fx-border-radius: 8px;" +
+                "-fx-border-width: 2px; -fx-cursor: hand;"
+            ));
+            resetBtn.setOnMouseExited(e -> resetBtn.setStyle(
+                "-fx-font-size: 15px; -fx-text-fill: #f43f5e; -fx-font-weight: bold;" +
+                "-fx-background-color: #22224a; -fx-padding: 12px 24px;" +
+                "-fx-border-color: #f43f5e; -fx-border-radius: 8px;" +
+                "-fx-border-width: 2px; -fx-cursor: hand;"
+            ));
+        }
+
+        if (resetCoordBtn != null) {
+            resetCoordBtn.setOnAction(e -> reset());
+            resetCoordBtn.setOnMouseEntered(e -> resetCoordBtn.setStyle(
+                "-fx-background-color: #e11d48; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"
+            ));
+            resetCoordBtn.setOnMouseExited(e -> resetCoordBtn.setStyle(
+                "-fx-background-color: #f43f5e; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"
+            ));
+        }
 
         showErrorsToggle.setOnAction(e -> updateVisuals());
     }
@@ -203,6 +237,48 @@ public class LeastSquaresViewController {
             gridPane.getChildren().remove(userGuessLine);
             userGuessLine = null;
         }
+    }
+
+    private void reset() {
+        // Remove plotted data points from the grid
+        gridPane.getChildren().removeAll(dataPoints);
+        dataPoints.clear();
+
+        // Clear error squares and residual lines
+        gridPane.getChildren().removeAll(errorLines);
+        gridPane.getChildren().removeAll(errorSquares);
+        errorLines.clear();
+        errorSquares.clear();
+
+        // Clear mathematical best fit line
+        if (bestFitLine != null) {
+            gridPane.getChildren().remove(bestFitLine);
+            bestFitLine = null;
+        }
+        bestFitActive = false;
+
+        // Clear user guess line and reset toggles
+        clearUserGuess();
+        userGuessClicks = 0;
+        userGuessToggle.setSelected(false);
+        showErrorsToggle.setSelected(false);
+
+        // Reset input coordinates
+        coordXInput.setText("0");
+        coordYInput.setText("0");
+
+        // Hide hover tooltip
+        if (hoverText != null) {
+            hoverText.setVisible(false);
+        }
+
+        // Reset live stats labels
+        livePointCount.setText("Data Points: 0");
+        liveEquationLabel.setText("ŷ = —");
+        if (liveLeastSquareSumLabel != null) {
+            liveLeastSquareSumLabel.setText("Sum: —");
+        }
+        instructionLabel.setText("Click anywhere on the grid to add data points. Drag them to adjust.");
     }
 
     private void addPoint(double mathX, double mathY) {

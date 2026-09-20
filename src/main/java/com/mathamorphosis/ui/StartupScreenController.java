@@ -14,6 +14,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 
 import java.util.ArrayList;
@@ -28,10 +29,12 @@ public class StartupScreenController {
     private Canvas canvas;
     private GraphicsContext gc;
     private AnimationTimer timer;
-    private List<Particle> particles;
-    private final int NUM_PARTICLES = 60;
+    private List<Particle> particles = new ArrayList<>();
+    private final int NUM_PARTICLES = 75;
+    private boolean initializedParticles = false;
+    private double lastW = 0, lastH = 0;
     
-    private final String[] SYMBOLS = {"∫", "Σ", "π", "∞", "√", "θ", "Δ"};
+    private final String[] SYMBOLS = {"∫", "Σ", "π", "∞", "√", "θ", "Δ", "λ", "φ", "∂"};
     private final Color[] PALETTE = {
         Color.web("#4cbf95"), // Emerald/Sage Green
         Color.web("#5ba8e0"), // Sky Blue
@@ -50,13 +53,6 @@ public class StartupScreenController {
         canvas.widthProperty().bind(rootPane.widthProperty());
         canvas.heightProperty().bind(rootPane.heightProperty());
         gc = canvas.getGraphicsContext2D();
-
-        particles = new ArrayList<>();
-        double initW = 1280;
-        double initH = 720;
-        for (int i = 0; i < NUM_PARTICLES; i++) {
-            particles.add(new Particle(initW, initH));
-        }
 
         timer = new AnimationTimer() {
             @Override
@@ -117,7 +113,36 @@ public class StartupScreenController {
         this.onStart = onStart;
     }
 
+    private void initParticles(double w, double h) {
+        particles = new ArrayList<>();
+        double cx = w / 2.0;
+        double cy = h / 2.0;
+        double maxR = Math.hypot(cx, cy) * 1.05;
+
+        for (int i = 0; i < NUM_PARTICLES; i++) {
+            // Distribute evenly across all angles (360 degrees) and full radial distance
+            double angle = (2.0 * Math.PI * i) / NUM_PARTICLES + (random.nextDouble() - 0.5) * (2.0 * Math.PI / NUM_PARTICLES);
+            // Sqrt of random gives uniform spatial 2D disc area distribution across all quadrants
+            double r = Math.sqrt(random.nextDouble()) * maxR;
+            double px = cx + r * Math.cos(angle);
+            double py = cy + r * Math.sin(angle);
+
+            // Clamp softly inside screen boundaries
+            px = Math.max(15, Math.min(w - 15, px));
+            py = Math.max(15, Math.min(h - 15, py));
+
+            particles.add(new Particle(px, py, cx, cy));
+        }
+    }
+
     private void draw(double width, double height) {
+        if (!initializedParticles || Math.abs(width - lastW) > 100 || Math.abs(height - lastH) > 100) {
+            initParticles(width, height);
+            lastW = width;
+            lastH = height;
+            initializedParticles = true;
+        }
+
         gc.setFill(Color.web("#0c0c1e"));
         gc.fillRect(0, 0, width, height);
 
@@ -136,9 +161,9 @@ public class StartupScreenController {
                 double dy = p1.y - p2.y;
                 double dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist < 160) {
-                    double alpha = 1.0 - (dist / 160.0);
-                    gc.setStroke(new Color(p1.color.getRed(), p1.color.getGreen(), p1.color.getBlue(), alpha * 0.5));
+                if (dist < 155) {
+                    double alpha = (1.0 - (dist / 155.0)) * 0.42;
+                    gc.setStroke(new Color(p1.color.getRed(), p1.color.getGreen(), p1.color.getBlue(), alpha));
                     gc.strokeLine(p1.x, p1.y, p2.x, p2.y);
                 }
             }
@@ -147,11 +172,11 @@ public class StartupScreenController {
         // Draw particles
         for (Particle p : particles) {
             if (p.symbol != null) {
-                gc.setFill(new Color(p.color.getRed(), p.color.getGreen(), p.color.getBlue(), 0.9));
-                gc.setFont(Font.font("Inter", 24));
-                gc.fillText(p.symbol, p.x - 12, p.y + 12);
+                gc.setFill(new Color(p.color.getRed(), p.color.getGreen(), p.color.getBlue(), 0.88));
+                gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
+                gc.fillText(p.symbol, p.x - 11, p.y + 8);
             } else {
-                gc.setFill(p.color);
+                gc.setFill(new Color(p.color.getRed(), p.color.getGreen(), p.color.getBlue(), 0.8));
                 gc.fillOval(p.x - p.radius, p.y - p.radius, p.radius * 2, p.radius * 2);
             }
         }
@@ -164,16 +189,34 @@ public class StartupScreenController {
         String symbol;
         Color color;
 
-        Particle(double w, double h) {
-            x = random.nextDouble() * w;
-            y = random.nextDouble() * h;
-            vx = (random.nextDouble() - 0.5) * 1.5;
-            vy = (random.nextDouble() - 0.5) * 1.5;
-            radius = random.nextDouble() * 3 + 1.5;
-            color = PALETTE[random.nextInt(PALETTE.length)];
+        Particle(double x, double y, double cx, double cy) {
+            reset(x, y, cx, cy);
+        }
 
-            if (random.nextDouble() < 0.15) {
-                symbol = SYMBOLS[random.nextInt(SYMBOLS.length)];
+        void reset(double x, double y, double cx, double cy) {
+            this.x = x;
+            this.y = y;
+
+            double dx = x - cx;
+            double dy = y - cy;
+            double angle = Math.atan2(dy, dx);
+            if (Math.abs(dx) < 1e-4 && Math.abs(dy) < 1e-4) {
+                angle = random.nextDouble() * 2 * Math.PI;
+            }
+
+            // Radial outward velocity spreading outward from the central zone
+            double speed = 0.45 + random.nextDouble() * 0.65;
+            double perpDrift = (random.nextDouble() - 0.5) * 0.25;
+            this.vx = Math.cos(angle) * speed - Math.sin(angle) * perpDrift;
+            this.vy = Math.sin(angle) * speed + Math.cos(angle) * perpDrift;
+
+            this.radius = random.nextDouble() * 2.5 + 1.5;
+            this.color = PALETTE[random.nextInt(PALETTE.length)];
+
+            if (random.nextDouble() < 0.22) {
+                this.symbol = SYMBOLS[random.nextInt(SYMBOLS.length)];
+            } else {
+                this.symbol = null;
             }
         }
 
@@ -181,10 +224,18 @@ public class StartupScreenController {
             x += vx;
             y += vy;
 
-            if (x < 0) { x = 0; vx = -vx; }
-            if (x > w) { x = w; vx = -vx; }
-            if (y < 0) { y = 0; vy = -vy; }
-            if (y > h) { y = h; vy = -vy; }
+            double cx = w / 2.0;
+            double cy = h / 2.0;
+
+            // When a particle flows past the screen border, respawn from the central zone
+            double margin = 40;
+            if (x < -margin || x > w + margin || y < -margin || y > h + margin) {
+                double spawnAngle = random.nextDouble() * 2 * Math.PI;
+                double spawnR = 25 + random.nextDouble() * 110;
+                double sx = cx + spawnR * Math.cos(spawnAngle);
+                double sy = cy + spawnR * Math.sin(spawnAngle);
+                reset(sx, sy, cx, cy);
+            }
         }
     }
 }

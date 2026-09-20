@@ -79,6 +79,7 @@ public class Main extends Application {
                 case "FOURIER_SERIES": fxmlFile = "/fxml/fourier_series_view.fxml"; break;
                 case "CHAOS_GAME": fxmlFile = "/fxml/chaos_game_view.fxml"; break;
                 case "CONVEX_HULL": fxmlFile = "/fxml/convex_hull_view.fxml"; break;
+                case "MATRIX_TRANSFORM": fxmlFile = "/fxml/matrix_transform_view.fxml"; break;
             }
 
             if (!fxmlFile.isEmpty()) {

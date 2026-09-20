@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.mathamorphosis.ui.visualizations.MatrixTransformViewController"
+            style="-fx-background-color: #0c0c1e;">
+
+    <!-- ═══════════════════ CENTER: Canvas ═══════════════════ -->
+    <center>
+        <VBox alignment="CENTER" spacing="0"
+              style="-fx-background-color: #0c0c1e;">
+
+            <StackPane fx:id="canvasContainer" VBox.vgrow="ALWAYS"
+                       style="-fx-background-color: #0c0c1e;">
+                <Canvas fx:id="canvas"/>
+            </StackPane>
+
+            <!-- Control bar -->
+            <VBox spacing="10" alignment="CENTER"
+                  style="-fx-background-color: #14142a; -fx-border-color: #32325a; -fx-border-width: 1 0 0 0;">
+                <padding><Insets top="12" right="16" bottom="12" left="16"/></padding>
+
+                <!-- Matrix inputs -->
+                <HBox spacing="24" alignment="CENTER">
+                    <Label text="Matrix"
+                           style="-fx-text-fill: #8080b0; -fx-font-size: 15px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+
+                    <!-- Left column: i-hat — inputs a (top) and c (bottom) -->
+                    <VBox spacing="4" alignment="CENTER">
+                        <Label text="i-hat"
+                               style="-fx-text-fill: #4cbf95; -fx-font-size: 12px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+                        <TextField fx:id="valA" text="1" prefWidth="70" prefHeight="32"
+                                   style="-fx-background-color: #1c1c38; -fx-text-fill: #4cbf95; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace; -fx-border-color: #4cbf95; -fx-border-radius: 5; -fx-background-radius: 5; -fx-alignment: CENTER;"/>
+                        <TextField fx:id="valC" text="0" prefWidth="70" prefHeight="32"
+                                   style="-fx-background-color: #1c1c38; -fx-text-fill: #4cbf95; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace; -fx-border-color: #4cbf95; -fx-border-radius: 5; -fx-background-radius: 5; -fx-alignment: CENTER;"/>
+                    </VBox>
+
+                    <!-- Right column: j-hat — inputs b (top) and d (bottom) -->
+                    <VBox spacing="4" alignment="CENTER">
+                        <Label text="j-hat"
+                               style="-fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+                        <TextField fx:id="valB" text="0" prefWidth="70" prefHeight="32"
+                                   style="-fx-background-color: #1c1c38; -fx-text-fill: #ef4444; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace; -fx-border-color: #ef4444; -fx-border-radius: 5; -fx-background-radius: 5; -fx-alignment: CENTER;"/>
+                        <TextField fx:id="valD" text="1" prefWidth="70" prefHeight="32"
+                                   style="-fx-background-color: #1c1c38; -fx-text-fill: #ef4444; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace; -fx-border-color: #ef4444; -fx-border-radius: 5; -fx-background-radius: 5; -fx-alignment: CENTER;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Presets -->
+                <HBox spacing="10" alignment="CENTER">
+                    <Button fx:id="identityBtn"  text="Identity"       styleClass="back-button"/>
+                    <Button fx:id="rotate45Btn"  text="Rotate 45°"     styleClass="back-button"/>
+                    <Button fx:id="shearBtn"     text="Shear"          styleClass="back-button"/>
+                    <StackPane alignment="BOTTOM_CENTER">
+                        <Button fx:id="scaleBtn" text="Scale" styleClass="back-button"/>
+                        <!-- Floating Scale Input Popup just above the scale button -->
+                        <HBox fx:id="scalePopupBox" visible="false" managed="false" alignment="CENTER" spacing="6"
+                              style="-fx-background-color: #1a1a36; -fx-border-color: #4ab8c4; -fx-border-width: 1.5; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 6 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 16, 0, 0, 4);">
+                            <Label text="Scale:"
+                                   style="-fx-text-fill: #b0b0d0; -fx-font-size: 12px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+                            <TextField fx:id="scaleFactorInput" text="2.0" prefWidth="60" prefHeight="28" promptText="Factor"
+                                       style="-fx-background-color: #0c0c1e; -fx-text-fill: #4ab8c4; -fx-font-size: 13px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace; -fx-border-color: #4ab8c4; -fx-border-radius: 5; -fx-background-radius: 5; -fx-alignment: CENTER;"/>
+                            <Button fx:id="applyScaleBtn" text="✓"
+                                    style="-fx-background-color: #4ab8c4; -fx-text-fill: #0c0c1e; -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5; -fx-padding: 4 10;"/>
+                            <Button fx:id="closeScalePopupBtn" text="✕"
+                                    style="-fx-background-color: transparent; -fx-text-fill: #8080b0; -fx-font-size: 12px; -fx-cursor: hand; -fx-padding: 4 6;"/>
+                        </HBox>
+                    </StackPane>
+                    <Button fx:id="collapseBtn"  text="Collapse (Det=0)" styleClass="back-button"/>
+                    <Button fx:id="recenterBtn"  text="Recenter Camera"  styleClass="back-button"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="animateBtn"   text="▶ Animate Transformation"
+                            style="-fx-background-color: #4ab8c4; -fx-text-fill: #0c0c1e; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-padding: 8 20; -fx-background-radius: 7;"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </center>
+
+    <!-- ═══════════════════ RIGHT: Info Panel ═══════════════════ -->
+    <right>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    style="-fx-background: transparent; -fx-background-color: transparent;">
+            <VBox spacing="16" prefWidth="380" minWidth="380" maxWidth="380"
+                  style="-fx-background-color: #14142a; -fx-border-color: #32325a; -fx-border-width: 0 0 0 1;">
+                <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+
+                <Label text="MATRIX"
+                       style="-fx-text-fill: #6868a0; -fx-font-size: 13px; -fx-font-weight: bold; -fx-letter-spacing: 1.5;"/>
+
+                <!-- Concept card -->
+                <VBox spacing="8"
+                      style="-fx-background-color: #1c1c38; -fx-border-color: #4ab8c4;
+                             -fx-border-width: 0 0 0 4; -fx-background-radius: 8; -fx-border-radius: 8;">
+                    <padding><Insets top="18" right="18" bottom="18" left="18"/></padding>
+                    <Label text="Matrix Transformation Visualizer"
+                           style="-fx-text-fill: #4ab8c4; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                    <Label text="Explore how 2×2 matrices transform the plane. Watch basis vectors warp, grids distort, and shapes morph as you change the matrix entries."
+                           wrapText="true"
+                           style="-fx-text-fill: #d0d0e8; -fx-font-size: 15px;"/>
+                </VBox>
+
+                <!-- Formulae card -->
+                <VBox spacing="8"
+                      style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                             -fx-border-width: 1; -fx-background-radius: 8; -fx-border-radius: 8;">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="FORMULAE"
+                           style="-fx-text-fill: #6868a0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                    <Label text="T(v) = M · v"
+                           style="-fx-text-fill: #d4a84b; -fx-font-size: 17px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+                    <Label text="[a b] [x]   [ax + by]"
+                           style="-fx-text-fill: #b0b0d0; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace;"/>
+                    <Label text="[c d] [y] = [cx + dy]"
+                           style="-fx-text-fill: #b0b0d0; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace;"/>
+                    <Label text="det(M) = ad − bc"
+                           style="-fx-text-fill: #b0b0d0; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace;"/>
+                </VBox>
+
+                <!-- Determinant / live readings card -->
+                <VBox spacing="8"
+                      style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                             -fx-border-width: 1; -fx-background-radius: 8; -fx-border-radius: 8;">
+                    <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                    <Label text="DIAGNOSTICS"
+                           style="-fx-text-fill: #6868a0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                    <Label fx:id="determinantLabel" text="det = 1.00  (Area Scale: 1.00)"
+                           style="-fx-text-fill: #4cbf95; -fx-font-size: 16px; -fx-font-weight: bold; -fx-font-family: 'Courier New', monospace;"/>
+                    <Label fx:id="iHatLabel" text="î  → (1.00, 0.00)"
+                           style="-fx-text-fill: #4cbf95; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace;"/>
+                    <Label fx:id="jHatLabel" text="ĵ  → (0.00, 1.00)"
+                           style="-fx-text-fill: #ef4444; -fx-font-size: 14px; -fx-font-family: 'Courier New', monospace;"/>
+                </VBox>
+
+                <!-- Colour guide -->
+                <VBox spacing="8"
+                      style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                             -fx-border-width: 1; -fx-background-radius: 8; -fx-border-radius: 8;">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <Label text="COLOUR GUIDE"
+                           style="-fx-text-fill: #6868a0; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="●" style="-fx-text-fill: #4cbf95; -fx-font-size: 16px; -fx-min-width: 18;"/>
+                        <Label text="î-hat (1,0) — transformed basis" wrapText="true"
+                               style="-fx-text-fill: #8080b0; -fx-font-size: 13px;"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="●" style="-fx-text-fill: #ef4444; -fx-font-size: 16px; -fx-min-width: 18;"/>
+                        <Label text="ĵ-hat (0,1) — transformed basis" wrapText="true"
+                               style="-fx-text-fill: #8080b0; -fx-font-size: 13px;"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="●" style="-fx-text-fill: #4ab8c4; -fx-font-size: 16px; -fx-min-width: 18;"/>
+                        <Label text="Transformed grid lines" wrapText="true"
+                               style="-fx-text-fill: #8080b0; -fx-font-size: 13px;"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="●" style="-fx-text-fill: rgba(74,184,196,0.3); -fx-font-size: 16px; -fx-min-width: 18;"/>
+                        <Label text="Determinant parallelogram (area)" wrapText="true"
+                               style="-fx-text-fill: #8080b0; -fx-font-size: 13px;"/>
+                    </HBox>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="●" style="-fx-text-fill: #d4a84b; -fx-font-size: 16px; -fx-min-width: 18;"/>
+                        <Label text="Reference shape (letter M)" wrapText="true"
+                               style="-fx-text-fill: #8080b0; -fx-font-size: 13px;"/>
+                    </HBox>
+                </VBox>
+
+                <!-- Interaction tips -->
+                <VBox spacing="8"
+                      style="-fx-background-color: #1c1c38; -fx-border-color: #32325a;
+                             -fx-border-width: 1; -fx-background-radius: 8; -fx-border-radius: 8;">
+                    <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
+                    <Label text="INTERACTION"
+                           style="-fx-text-fill: #6868a0; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                    <Label text="• Edit matrix values directly in the text fields"
+                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
+                    <Label text="• Scroll to zoom camera, drag canvas to pan"
+                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
+                    <Label text="• Click a preset to load a classic transformation"
+                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
+                    <Label text="• Press 'Animate' to smoothly morph to the target"
+                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
+                    <Label text="• Watch det turn red when the matrix is singular"
+                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </right>
+
+</BorderPane>

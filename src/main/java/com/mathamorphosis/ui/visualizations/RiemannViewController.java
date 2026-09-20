@@ -10,10 +10,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import net.objecthunter.exp4j.ValidationResult;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Controller for riemann_view.fxml.
@@ -48,6 +55,8 @@ public class RiemannViewController {
     private double bValue      = 10.0;
     private String functionStr = "0.2*x^2+3";
     private Expression expression;
+    private String parseError  = null;   // non-null while the typed text cannot be parsed
+    private String lastProblemSignature = null;   // avoids re-laying-out an unchanged error card every frame
 
     private AnimationTimer timer;
     private boolean isRunning  = false;
@@ -258,18 +267,48 @@ public class RiemannViewController {
 
     private String insertImplicitMultiplication(String func) {
         func = func.replaceAll("\\s+", "");
-        func = func.replaceAll("(\\d)(?=(x|sin|cos|tan|log|exp|sqrt|pi|\\())", "$1*");
+        // The lookbehinds keep digits that belong to a function name (log10, log2, expm1) from being split
+        func = func.replaceAll("(?<![0-9])(?<!log)(?<!expm)(\\d+(?:\\.\\d+)?)(?=(x|sin|cos|tan|log|exp|sqrt|pi|\\())", "$1*");
         func = func.replaceAll("(x|\\))(?=(x|\\d|sin|cos|tan|log|exp|sqrt|pi|e|\\())", "$1*");
         return func;
     }
 
     private void updateFunction(String newFunc) {
         try {
-            String processed = insertImplicitMultiplication(newFunc);
-            expression = new ExpressionBuilder(processed).variables("x").build();
-            functionStr = newFunc;
-            draw(getMappedN());
-        } catch (Exception ignored) {}
+            String processed = insertImplicitMultiplication(newFunc == null ? "" : newFunc);
+            if (processed.isEmpty())
+                throw new IllegalArgumentException("Type a function of x to get started.");
+
+            Expression built = new ExpressionBuilder(processed).variables("x").build();
+            ValidationResult check = built.validate(false);   // catches things like "2+" up front
+            if (!check.isValid())
+                throw new IllegalArgumentException(String.join("; ", check.getErrors()));
+            try {
+                built.setVariable("x", 1.0).evaluate();   // structural sanity check (e.g. rejects "()")
+            } catch (ArithmeticException ignored) {
+                // e.g. 1/(x-1) at x = 1: a domain problem, reported later together with its location
+            }
+
+            expression = built;
+            parseError = null;
+        } catch (Exception e) {
+            // Previously this was swallowed silently, leaving the old graph on screen.
+            expression = null;
+            parseError = readableParseMessage(e);
+        }
+        functionStr = newFunc;
+        draw(getMappedN());
+    }
+
+    private String readableParseMessage(Exception e) {
+        if (e instanceof NumberFormatException)
+            return "A number is not written correctly (check the decimal points).";
+        String msg = e.getMessage();
+        if (msg == null || msg.isBlank()) return "Check the brackets and operators.";
+        msg = msg.replaceAll("\\s+in expression '.*'\\s*$", "");   // the user can already see what they typed
+        if (msg.equals("Too many operators"))
+            return "An operator is missing a number or bracket next to it (for example \"2+\" or \"*x\").";
+        return msg;
     }
 
     private double f(double x) {
@@ -285,24 +324,31 @@ public class RiemannViewController {
 
     private enum FunctionState { VALID, DIVERGENT, ERROR }
 
-    private FunctionState checkFunctionState(double a, double b) {
-        if (expression == null) return FunctionState.ERROR;
+    /** Result of scanning f over [a, b]; badX is the first x where f was undefined / infinite. */
+    private record FunctionCheck(FunctionState state, double badX) {}
+
+    private FunctionCheck checkFunctionState(double a, double b) {
+        if (expression == null) return new FunctionCheck(FunctionState.ERROR, Double.NaN);
         if (b < a) { double tmp = a; a = b; b = tmp; }
         int N = 1000;
         double dx = (b - a) / N;
         if (dx == 0) dx = 1e-9;
         boolean hasInfinity = false;
+        double firstInfinite = Double.NaN;
         for (int i = 0; i <= N; i++) {
-            double y = f(a + i * dx);
-            if (Double.isNaN(y)) return FunctionState.ERROR;
-            if (Double.isInfinite(y)) hasInfinity = true;
+            double x = a + i * dx;
+            double y = f(x);
+            if (Double.isNaN(y)) return new FunctionCheck(FunctionState.ERROR, x);
+            if (Double.isInfinite(y) && !hasInfinity) { hasInfinity = true; firstInfinite = x; }
         }
         for (int i = 0; i < N; i++) {
-            double y = f(a + i * dx + dx / 2.0);
-            if (Double.isNaN(y)) return FunctionState.ERROR;
-            if (Double.isInfinite(y)) hasInfinity = true;
+            double x = a + i * dx + dx / 2.0;
+            double y = f(x);
+            if (Double.isNaN(y)) return new FunctionCheck(FunctionState.ERROR, x);
+            if (Double.isInfinite(y) && !hasInfinity) { hasInfinity = true; firstInfinite = x; }
         }
-        return hasInfinity ? FunctionState.DIVERGENT : FunctionState.VALID;
+        return hasInfinity ? new FunctionCheck(FunctionState.DIVERGENT, firstInfinite)
+                           : new FunctionCheck(FunctionState.VALID, Double.NaN);
     }
 
     private double calculateActualArea(double a, double b) {
@@ -334,32 +380,55 @@ public class RiemannViewController {
     // ── Drawing ──────────────────────────────────────────────────────────────
 
     private void draw(int n) {
-        if (expression == null) return;
-
         double W = canvas.getWidth(), H = canvas.getHeight();
+
+        // The typed text can't be parsed: say so (instead of leaving a stale or blank plot).
+        if (expression == null) {
+            if (parseError == null || W <= 0 || H <= 0) return;   // not initialised yet / no size yet
+            if (!modeToggle.isSelected()) nSlider.setDisable(true);
+            estValueLabel.setText("Error");
+            actValueLabel.setText("Invalid expression");
+            errorValueLabel.setText("N/A");
+            drawProblem(W, H, STAT_EST,
+                "Can't read this expression",
+                parseError,
+                "Use x as the variable, e.g. 0.2*x^2+3 or sin(x)+2. "
+                + "Supported: + - * / ^  sin  cos  tan  sqrt  log  exp  abs  pi  e");
+            return;
+        }
+
         if (W <= 0 || H <= 0) return;
 
-        FunctionState state = checkFunctionState(aValue, bValue);
+        FunctionCheck check = checkFunctionState(aValue, bValue);
+        FunctionState state = check.state();
+        String interval = "[" + fmtNum(Math.min(aValue, bValue)) + ", " + fmtNum(Math.max(aValue, bValue)) + "]";
 
         if (state == FunctionState.ERROR) {
             if (!modeToggle.isSelected()) nSlider.setDisable(true);
-            estValueLabel.setText("Error");
+            estValueLabel.setText("Not integrable");
             actValueLabel.setText("Undefined");
             errorValueLabel.setText("N/A");
-            gc.setFill(Color.web(BG_DEEP));
-            gc.fillRect(0, 0, W, H);
+            drawProblem(W, H, STAT_EST,
+                "Not integrable on " + interval,
+                "f(x) has no real value near x \u2248 " + fmtNum(check.badX())
+                    + " (for example a square root or logarithm of a negative number, or 0/0).",
+                "Try bounds that keep the interval inside the region where f(x) is defined.");
             return;
         } else if (state == FunctionState.DIVERGENT) {
             if (!modeToggle.isSelected()) nSlider.setDisable(true);
-            estValueLabel.setText("Divergent");
-            actValueLabel.setText("∞");
+            estValueLabel.setText("Not integrable");
+            actValueLabel.setText("\u221E");
             errorValueLabel.setText("N/A");
-            gc.setFill(Color.web(BG_DEEP));
-            gc.fillRect(0, 0, W, H);
+            drawProblem(W, H, ACCENT_WARM,
+                "Not integrable on " + interval,
+                "f(x) blows up to infinity near x \u2248 " + fmtNum(check.badX())
+                    + ", so it is unbounded on this interval and the rectangles cannot approximate a finite area.",
+                "Try bounds that stay away from x \u2248 " + fmtNum(check.badX()) + ", or pick a different function.");
             return;
         } else {
             if (!modeToggle.isSelected()) nSlider.setDisable(false);
         }
+        lastProblemSignature = null;   // a normal plot is about to overwrite any earlier message
 
         final double PAD_L = 60, PAD_R = 30, PAD_T = 30, PAD_B = 40;
         final double plotW = W - PAD_L - PAD_R;
@@ -497,6 +566,133 @@ public class RiemannViewController {
         // Fade estimated-area colour from terracotta → sage as n grows
         Color estColor = interpolateColor(Color.web(STAT_EST), Color.web(STAT_ACT), progress);
         estValueLabel.setStyle("-fx-text-fill: " + toHex(estColor) + "; -fx-font-size:18px; -fx-font-weight:bold;");
+    }
+
+    // ── "Problem" message card (unintegrable / undefined / unparsable function) ──
+
+    private String fmtNum(double v) {
+        if (Double.isNaN(v)) return "?";
+        if (Math.abs(v) < 1e-9) return "0";
+        return String.format(Locale.ROOT, "%.4f", v).replaceAll("0+$", "").replaceAll("\\.$", "");
+    }
+
+    private double measure(String text, Font font) {
+        Text t = new Text(text);
+        t.setFont(font);
+        return t.getLayoutBounds().getWidth();
+    }
+
+    /** Word-wraps text to maxWidth; over-long single words are broken by character. */
+    private List<String> wrapText(String text, Font font, double maxWidth) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            while (measure(word, font) > maxWidth && word.length() > 1) {
+                int cut = word.length() - 1;
+                while (cut > 1 && measure(word.substring(0, cut), font) > maxWidth) cut--;
+                if (line.length() > 0) { lines.add(line.toString()); line.setLength(0); }
+                lines.add(word.substring(0, cut));
+                word = word.substring(cut);
+            }
+            String candidate = line.length() == 0 ? word : line + " " + word;
+            if (line.length() > 0 && measure(candidate, font) > maxWidth) {
+                lines.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(candidate);
+            }
+        }
+        if (line.length() > 0) lines.add(line.toString());
+        return lines;
+    }
+
+    /**
+     * Replaces the plot with an explanatory card centred on the canvas, so the user sees WHY
+     * nothing is drawn instead of an empty panel.
+     */
+    private void drawProblem(double W, double H, String accent, String title, String detail, String hint) {
+        String signature = W + "x" + H + "|" + functionStr + "|" + title + "|" + detail + "|" + hint;
+        if (signature.equals(lastProblemSignature)) return;   // already on screen (e.g. auto-play ticks)
+        lastProblemSignature = signature;
+
+        final double PAD_L = 60, PAD_R = 30, PAD_T = 30, PAD_B = 40;
+        final double plotW = Math.max(0, W - PAD_L - PAD_R);
+        final double plotH = Math.max(0, H - PAD_T - PAD_B);
+
+        gc.save();
+        gc.setEffect(null);
+        gc.setLineDashes(0);
+
+        // Same backdrop as a normal plot, so the panel doesn't look broken/empty
+        gc.setFill(Color.web(BG_DEEP));
+        gc.fillRect(0, 0, W, H);
+        gc.setFill(Color.web("#20203a"));
+        gc.fillRect(PAD_L, PAD_T, plotW, plotH);
+
+        // Keep the f(x) legend so it is clear what was entered
+        gc.setFill(Color.web("#40e0d0"));
+        gc.setFont(Font.font("Monospace", FontWeight.BOLD, 15));
+        gc.fillText("f(x) = " + functionStr, PAD_L + 10, PAD_T + 20);
+
+        final double inner = 22, badgeR = 13, gap = 12;
+        final double cardW = Math.min(580, plotW - 40);
+        if (cardW > 2 * inner + 100) {
+            Font titleFont = Font.font("System", FontWeight.BOLD, 20);
+            Font bodyFont  = Font.font("System", FontWeight.NORMAL, 14);
+            Font hintFont  = Font.font("System", FontPosture.ITALIC, 13);
+
+            double textW = cardW - 2 * inner;
+            List<String> titleLines  = wrapText(title,  titleFont, textW - 2 * badgeR - 12);
+            List<String> detailLines = wrapText(detail, bodyFont,  textW);
+            List<String> hintLines   = hint == null ? List.of() : wrapText(hint, hintFont, textW);
+
+            final double titleLH = 26, bodyLH = 20, hintLH = 18;
+            double cardH = inner + titleLines.size() * titleLH
+                         + gap + detailLines.size() * bodyLH
+                         + (hintLines.isEmpty() ? 0 : gap + hintLines.size() * hintLH)
+                         + inner;
+            double cardX = PAD_L + (plotW - cardW) / 2.0;
+            double cardY = PAD_T + Math.max(36, (plotH - cardH) / 2.0);
+
+            // Card
+            gc.setFill(Color.web("#14142a", 0.96));
+            gc.fillRoundRect(cardX, cardY, cardW, cardH, 12, 12);
+            gc.setStroke(Color.web(accent, 0.85));
+            gc.setLineWidth(1.5);
+            gc.strokeRoundRect(cardX, cardY, cardW, cardH, 12, 12);
+            gc.setFill(Color.web(accent));
+            gc.fillRoundRect(cardX, cardY, 5, cardH, 4, 4);
+
+            // "!" badge + title
+            double x = cardX + inner;
+            double y = cardY + inner;
+            gc.setFill(Color.web(accent));
+            gc.fillOval(x, y + 1, 2 * badgeR, 2 * badgeR);
+            gc.setFill(Color.web("#0a0a14"));
+            gc.setFont(Font.font("System", FontWeight.BOLD, 17));
+            gc.fillText("!", x + badgeR - 3, y + badgeR + 7);
+
+            gc.setFill(Color.web("#f0f0f8"));
+            gc.setFont(titleFont);
+            double textX = x + 2 * badgeR + 12;
+            double ty = y + 20;
+            for (String ln : titleLines) { gc.fillText(ln, textX, ty); ty += titleLH; }
+
+            // Explanation
+            double by = y + titleLines.size() * titleLH + gap + 14;
+            gc.setFill(Color.web("#d0d0e8"));
+            gc.setFont(bodyFont);
+            for (String ln : detailLines) { gc.fillText(ln, x, by); by += bodyLH; }
+
+            // Hint
+            if (!hintLines.isEmpty()) {
+                by += gap - 2;
+                gc.setFill(Color.web(TEXT_MUTED));
+                gc.setFont(hintFont);
+                for (String ln : hintLines) { gc.fillText(ln, x, by); by += hintLH; }
+            }
+        }
+        gc.restore();
     }
 
     // ── Colour utilities ─────────────────────────────────────────────────────

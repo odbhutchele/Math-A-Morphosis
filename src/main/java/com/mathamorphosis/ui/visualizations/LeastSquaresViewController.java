@@ -14,7 +14,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Polygon;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -57,7 +56,6 @@ public class LeastSquaresViewController {
     // ── State ────────────────────────────────────────────────────────────────
     private final List<Circle>    dataPoints   = new ArrayList<>();
     private final List<Line>      errorLines   = new ArrayList<>();
-    private final List<Polygon> errorSquares = new ArrayList<>();
 
     private Line    userGuessLine  = null;
     private Line    bestFitLine    = null;
@@ -244,11 +242,9 @@ public class LeastSquaresViewController {
         gridPane.getChildren().removeAll(dataPoints);
         dataPoints.clear();
 
-        // Clear error squares and residual lines
+        // Clear residual error lines
         gridPane.getChildren().removeAll(errorLines);
-        gridPane.getChildren().removeAll(errorSquares);
         errorLines.clear();
-        errorSquares.clear();
 
         // Clear mathematical best fit line
         if (bestFitLine != null) {
@@ -377,8 +373,7 @@ public class LeastSquaresViewController {
         bestFitLine.setEndX(toScreenX(X_MAX));   bestFitLine.setEndY(toScreenY(m * X_MAX + b));
 
         gridPane.getChildren().removeAll(errorLines);
-        gridPane.getChildren().removeAll(errorSquares);
-        errorLines.clear(); errorSquares.clear();
+        errorLines.clear();
 
         if (showErrorsToggle.isSelected()) {
             double startX = toScreenX(0);
@@ -404,23 +399,7 @@ public class LeastSquaresViewController {
                 errLine.setStrokeWidth(2);
                 errLine.getStrokeDashArray().addAll(5d, 5d);
                 errorLines.add(errLine);
-
-                double dist = Math.hypot(px - cx, py - cy);
-                if (dist > 0) {
-                    Polygon square = new Polygon();
-                    square.getPoints().addAll(
-                        px, py,
-                        cx, cy,
-                        cx - (cy - py), cy + (cx - px),
-                        px - (cy - py), py + (cx - px)
-                    );
-                    square.setFill(Color.web("#f43f5e", 0.2));
-                    square.setStroke(Color.web("#f43f5e"));
-                    square.setStrokeWidth(1.5);
-                    errorSquares.add(square);
-                }
             }
-            gridPane.getChildren().addAll(errorSquares);
             gridPane.getChildren().addAll(errorLines);
             bestFitLine.toFront();
             dataPoints.forEach(javafx.scene.Node::toFront);

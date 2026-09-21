@@ -7,6 +7,8 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -26,10 +28,20 @@ public class Main extends Application {
 
         rootNode = new StackPane();
         mainScene = new Scene(rootNode, 1280, 720);
-        
+
         // Load CSS
         String css = getClass().getResource("/styles/theme.css").toExternalForm();
         mainScene.getStylesheets().add(css);
+
+        // F11 toggles true fullscreen (covers taskbar and title bar)
+        mainScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.F11) {
+                this.primaryStage.setFullScreen(!this.primaryStage.isFullScreen());
+            }
+        });
+
+        // Hide the default "Press ESC to exit fullscreen" overlay text
+        this.primaryStage.setFullScreenExitHint("");
 
         showStartupScreen();
 

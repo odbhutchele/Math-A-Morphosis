@@ -1,6 +1,4 @@
 # Math-A-Morphosis
-Your friendly Math visuailzation tool built in Java
-
 ---
 
 ### 👥 Project Team
@@ -13,7 +11,7 @@ Your friendly Math visuailzation tool built in Java
 
 ---
 
-**Math-A-Morphosis** (Project_Math) is an interactive, visual mathematics simulation platform designed to bring complex mathematical concepts and geometric algorithms to life. Through real-time canvas rendering, dynamic step-by-step visualizations, and adjustable parameters, this project helps users intuitively grasp mathematical theorems, linear transformations, and computational geometry algorithms.
+**Math-A-Morphosis** is an interactive, visual mathematics simulation platform designed to bring complex mathematical concepts and geometric algorithms to life. Through real-time canvas rendering, dynamic step-by-step visualizations, and adjustable parameters, this project helps users intuitively grasp mathematical theorems, linear transformations, and computational geometry algorithms.
 
 ---
 

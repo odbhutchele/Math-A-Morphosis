@@ -40,9 +40,6 @@ Your friendly Math visuailzation tool built in Java
 ---
 
 
-
-&nbsp;
-
 &nbsp;
 
 &nbsp;

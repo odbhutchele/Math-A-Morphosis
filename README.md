@@ -1,5 +1,4 @@
 # Math-A-Morphosis
----
 
 ### 👥 Project Team
 

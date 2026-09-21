@@ -39,13 +39,6 @@ Your friendly Math visuailzation tool built in Java
 
 ---
 
-
-&nbsp;
-
-&nbsp;
-
----
-
 ## 🎬 Presentation Video
 
 > **Link to the presentation video:** [▶ Click here to watch](https://youtu.be/atzTl2r28k8)

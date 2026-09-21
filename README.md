@@ -1,5 +1,18 @@
 # Math-A-Morphosis
 Your friendly Math visuailzation tool built in Java
+
+---
+
+### 👥 Project Team
+
+| Name | Student ID |
+|------|------------|
+| Anas Ibn Aziz | 230041122 |
+| Ahnaf Irtiza Nibir | 230041134 |
+| Adi Islam | 230041138 |
+
+---
+
 **Math-A-Morphosis** (Project_Math) is an interactive, visual mathematics simulation platform designed to bring complex mathematical concepts and geometric algorithms to life. Through real-time canvas rendering, dynamic step-by-step visualizations, and adjustable parameters, this project helps users intuitively grasp mathematical theorems, linear transformations, and computational geometry algorithms.
 
 ---
@@ -26,3 +39,18 @@ Your friendly Math visuailzation tool built in Java
 
 ---
 
+
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+---
+
+## 🎬 Presentation Video
+
+> **Link to the presentation video:** [▶ Click here to watch](https://youtu.be/atzTl2r28k8)
+
+---

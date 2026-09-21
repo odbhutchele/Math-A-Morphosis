@@ -279,10 +279,14 @@ public class DashboardController {
 
     // ── 2. Calculus ──────────────────────────────────────────────────────────
     private void drawCalculus(GraphicsContext gc, Color accent, AnimState s) {
+        // Brightness ramp: starts faded, gradually brightens, capped so it never overpowers text
+        double ramp = Math.min(1.0, s.t / 2.0);
+        double brightness = 0.18 + 0.47 * (ramp * ramp * (3 - 2 * ramp));
+
         int n = Math.max(2, (int)(2 + 18 * ((Math.sin(s.t * 0.5) + 1) / 2.0)));
         double padL = 30, padR = 20, padT = 20, padB = 30;
         double pW = CARD_W - padL - padR, pH = CARD_H - padT - padB;
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2 * brightness));
         gc.setLineWidth(1);
         gc.strokeLine(padL, padT + pH, padL + pW, padT + pH);
         gc.strokeLine(padL, padT, padL, padT + pH);
@@ -292,14 +296,14 @@ public class DashboardController {
             double rx = padL + i * pW / n;
             double rw = pW / n - 1;
             double rh = y * pH;
-            double alpha = 0.10 + 0.07 / n;
+            double alpha = (0.10 + 0.07 / n) * brightness;
             gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), alpha));
             gc.fillRect(rx, padT + pH - rh, rw, rh);
-            gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.25));
+            gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.25 * brightness));
             gc.setLineWidth(0.5);
             gc.strokeRect(rx, padT + pH - rh, rw, rh);
         }
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.55));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.55 * brightness));
         gc.setLineWidth(2);
         gc.beginPath();
         for (int i = 0; i <= 100; i++) {
@@ -390,31 +394,35 @@ public class DashboardController {
 
     // ── 5. Trigonometry ──────────────────────────────────────────────────────
     private void drawTrigonometry(GraphicsContext gc, Color accent, AnimState s) {
+        // Brightness ramp: starts faded, gradually brightens, capped so it never overpowers text
+        double ramp = Math.min(1.0, s.t / 2.0);
+        double brightness = 0.18 + 0.47 * (ramp * ramp * (3 - 2 * ramp));
+
         double cx = CARD_W * 0.68, cy = CARD_H * 0.5, r = 52;
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2 * brightness));
         gc.setLineWidth(1);
         gc.strokeLine(cx - r - 8, cy, cx + r + 8, cy);
         gc.strokeLine(cx, cy - r - 8, cx, cy + r + 8);
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.3));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.3 * brightness));
         gc.setLineWidth(1.5);
         gc.strokeOval(cx - r, cy - r, r * 2, r * 2);
         double angle = s.t * 0.9;
         double hx = cx + r * Math.cos(angle);
         double hy = cy - r * Math.sin(angle);
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.75));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.75 * brightness));
         gc.setLineWidth(2);
         gc.strokeLine(cx, cy, hx, hy);
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.4));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.4 * brightness));
         gc.setLineDashes(4, 4); gc.setLineWidth(1.2);
         gc.strokeLine(hx, hy, hx, cy);
         gc.setLineDashes();
-        gc.setStroke(new Color(accent.getRed()+0.1, accent.getGreen(), accent.getBlue(), 0.3));
+        gc.setStroke(new Color(accent.getRed()+0.1, accent.getGreen(), accent.getBlue(), 0.3 * brightness));
         gc.setLineDashes(4, 4); gc.setLineWidth(1.2);
         gc.strokeLine(hx, cy, cx, cy);
         gc.setLineDashes();
-        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.85));
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.85 * brightness));
         gc.fillOval(hx - 5, hy - 5, 10, 10);
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.4));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.4 * brightness));
         gc.setLineWidth(1.5);
         gc.beginPath();
         for (int i = 0; i <= 80; i++) {
@@ -425,21 +433,25 @@ public class DashboardController {
             if (i == 0) gc.moveTo(wx, wy); else gc.lineTo(wx, wy);
         }
         gc.stroke();
-        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.45));
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.45 * brightness));
         gc.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
         gc.fillText("θ", cx + 12, cy - 5);
     }
 
     // ── 6. Algebra ───────────────────────────────────────────────────────────
     private void drawAlgebra(GraphicsContext gc, Color accent, AnimState s) {
+        // Brightness ramp: starts faded, gradually brightens, capped so it never overpowers text
+        double ramp = Math.min(1.0, s.t / 2.0);
+        double brightness = 0.18 + 0.47 * (ramp * ramp * (3 - 2 * ramp));
+
         double padL = 30, padT = 18, pW = CARD_W - padL - 15, pH = CARD_H - padT - 25;
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.2 * brightness));
         gc.setLineWidth(1);
         gc.strokeLine(padL, padT + pH, padL + pW, padT + pH);
         gc.strokeLine(padL, padT, padL, padT + pH);
         gc.strokeLine(padL + pW / 2, padT, padL + pW / 2, padT + pH);
         double shift = Math.sin(s.t * 0.6) * 0.3;
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.6));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.6 * brightness));
         gc.setLineWidth(2);
         gc.beginPath();
         for (int i = 0; i <= 100; i++) {
@@ -451,7 +463,7 @@ public class DashboardController {
             if (i == 0) gc.moveTo(sx, sy); else gc.lineTo(sx, sy);
         }
         gc.stroke();
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.3));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.3 * brightness));
         gc.setLineWidth(1.5);
         gc.beginPath();
         for (int i = 0; i <= 100; i++) {
@@ -465,7 +477,7 @@ public class DashboardController {
         String[] eqs = {"y=x²","f(x)","ax+b","y=|x|"};
         for (int i = 0; i < eqs.length; i++) {
             double ey = (padT + 12) + i * 26 + 8 * Math.sin(s.t * 0.5 + i * 1.3);
-            double alpha = 0.12 + 0.07 * Math.sin(s.t + i);
+            double alpha = (0.12 + 0.07 * Math.sin(s.t + i)) * brightness;
             gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), alpha));
             gc.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
             gc.fillText(eqs[i], 5, ey);
@@ -474,11 +486,15 @@ public class DashboardController {
 
     // ── 7. Fourier ───────────────────────────────────────────────────────────
     private void drawFourier(GraphicsContext gc, Color accent, AnimState s) {
+        // Brightness ramp: starts faded, gradually brightens, capped so it never overpowers text
+        double ramp = Math.min(1.0, s.t / 2.0);
+        double brightness = 0.18 + 0.47 * (ramp * ramp * (3 - 2 * ramp));
+
         double midY = CARD_H * 0.5;
         double ampScale = CARD_H * 0.35;
         int harmonics = 5;
         for (int k = 1; k <= harmonics; k++) {
-            double alpha = 0.08 + 0.04 / k;
+            double alpha = (0.08 + 0.04 / k) * brightness;
             gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), alpha));
             gc.setLineWidth(1);
             gc.beginPath();
@@ -489,7 +505,7 @@ public class DashboardController {
             }
             gc.stroke();
         }
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.65));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.65 * brightness));
         gc.setLineWidth(2.2);
         gc.beginPath();
         for (int i = 0; i <= (int)CARD_W; i++) {
@@ -502,15 +518,15 @@ public class DashboardController {
         }
         gc.stroke();
         double ecx = CARD_W * 0.85, ecy = CARD_H * 0.5, er = 22;
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.25));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.25 * brightness));
         gc.setLineWidth(1);
         gc.strokeOval(ecx - er, ecy - er, er * 2, er * 2);
         double ehx = ecx + er * Math.cos(s.t);
         double ehy = ecy + er * Math.sin(s.t);
-        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.55));
+        gc.setStroke(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.55 * brightness));
         gc.setLineWidth(1.8);
         gc.strokeLine(ecx, ecy, ehx, ehy);
-        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.7));
+        gc.setFill(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 0.7 * brightness));
         gc.fillOval(ehx - 4, ehy - 4, 8, 8);
     }
 

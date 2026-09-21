@@ -127,8 +127,6 @@
                            wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
                     <Label text="• Use ▶ Start to auto-rotate Vector A continuously"
                            wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
-                    <Label text="• Watch the projection update in real time"
-                           wrapText="true" style="-fx-text-fill: #b0b0d0; -fx-font-size: 13px;"/>
                 </VBox>
             </VBox>
         </ScrollPane>

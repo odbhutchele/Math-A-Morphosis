@@ -163,10 +163,10 @@ public class VectorViewController {
         gc.fillOval(ORIGIN_X + ax - 8, ORIGIN_Y + ay - 8, 16, 16);
 
         // Update live labels
-        vectorALabel.setText(String.format("A = (%.1f, %.1f)", ax, ay));
-        vectorBLabel.setText(String.format("B = (%.1f, %.1f)", bx, by));
+        vectorALabel.setText(String.format("A = (%.1f, %.1f)", ax, -ay));
+        vectorBLabel.setText(String.format("B = (%.1f, %.1f)", bx, -by));
         dotProductLabel.setText(String.format("A · B = %.1f", dot));
-        projLabel.setText(String.format("proj = (%.1f, %.1f)", projX, projY));
+        projLabel.setText(String.format("proj = (%.1f, %.1f)", projX, -projY));
     }
 
     private void drawArrow(double x1, double y1, double x2, double y2) {
